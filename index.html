@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Financeiro</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i data-lucide="layout-dashboard"></i>
+                <span>COINEST</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active"><i data-lucide="grid"></i> Dashboard</a>
+                <a href="/transacoes.html" class="nav-item"><i data-lucide="arrow-left-right"></i> Transações</a>
+                <a href="#" class="nav-item"><i data-lucide="credit-card"></i> Cartões</a>
+                <a href="#" class="nav-item"><i data-lucide="pie-chart"></i> Relatórios</a>
+                <a href="#" class="nav-item"><i data-lucide="settings"></i> Configurações</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header class="topbar">
+                <h2>Dashboard</h2>
+                <div class="topbar-actions">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="global-search" placeholder="Buscar transações...">
+                    </div>
+                    <button class="icon-btn"><i data-lucide="bell"></i></button>
+                    <div class="user-profile">
+                        <div class="avatar">ES</div>
+                        <span>Eduardo Soares</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-grid">
+                
+                <!-- Coluna Esquerda -->
+                <div class="col-left">
+                    <!-- Resumo Financeiro -->
+                    <div class="summary-row">
+                        <div class="summary-card virtual-card-display">
+                            <div class="card-header">
+                                <span>Saldo Atual</span>
+                                <i data-lucide="wifi"></i>
+                            </div>
+                            <h3 id="total-balance">R$ 0,00</h3>
+                            <div class="card-footer">
+                                <span>Cartão Principal</span>
+                                <span id="active-card-number">**** **** **** 0000</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="card-icon income"><i data-lucide="arrow-up-right"></i></div>
+                            <span class="label">Total Receitas</span>
+                            <h3 id="total-income">R$ 0,00</h3>
+                        </div>
+                        <div class="summary-card">
+                            <div class="card-icon expense"><i data-lucide="arrow-down-right"></i></div>
+                            <span class="label">Total Despesas</span>
+                            <h3 id="total-expense">R$ 0,00</h3>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico de Fluxo de Caixa -->
+                    <div class="panel chart-panel">
+                        <div class="panel-header">
+                            <h3>Fluxo de Caixa Mensal</h3>
+                        </div>
+                        <canvas id="cashflowChart"></canvas>
+                    </div>
+
+                    <!-- Lista de Transações -->
+                    <div class="panel list-panel">
+                        <div class="panel-header">
+                            <h3>Transações Recentes</h3>
+                            <div class="actions">
+                                <button class="btn btn-primary" onclick="openTransactionModal()"><i data-lucide="plus"></i> Nova Transação</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Filtros Rápidos -->
+                        <div class="quick-filters">
+                            <select id="filter-type">
+                                <option value="todos">Todos os Tipos</option>
+                                <option value="receita">Receitas</option>
+                                <option value="despesa">Despesas</option>
+                            </select>
+                            <select id="filter-card">
+                                <option value="todos">Todos os Cartões</option>
+                            </select>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="transactions-table">
+                                <thead>
+                                    <tr>
+                                        <th>Descrição</th>
+                                        <th>Data</th>
+                                        <th>Cartão</th>
+                                        <th>Valor</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactions-list">
+                                    <!-- Renderizado via JS -->
+                                </tbody>
+                            </table>
+                            <div id="empty-state" class="empty-state hidden">Nenhuma transação encontrada.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna Direita -->
+                <div class="col-right">
+                    <!-- Gerenciamento de Cartões -->
+                    <div class="panel cards-panel">
+                        <div class="panel-header">
+                            <h3>Meus Cartões</h3>
+                            <button class="btn btn-icon" onclick="openCardModal()" title="Adicionar Cartão"><i data-lucide="plus-circle"></i></button>
+                        </div>
+                        <ul id="cards-list" class="cards-list">
+                            <!-- Renderizado via JS -->
+                        </ul>
+                    </div>
+
+                    <!-- Estatísticas por Categoria -->
+                    <div class="panel stats-panel">
+                        <div class="panel-header">
+                            <h3>Despesas por Categoria</h3>
+                        </div>
+                        <div class="chart-container-donut">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Transação -->
+    <div id="modal-transaction" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="form-title">Nova Transação</h3>
+                <button class="close-btn" onclick="closeModals()"><i data-lucide="x"></i></button>
+            </div>
+            <form id="transaction-form" novalidate>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="description" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor (R$)</label>
+                        <input type="text" id="amount" inputmode="numeric" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="date" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="type" required>
+                            <option value="despesa">Despesa</option>
+                            <option value="receita">Receita</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select id="category" required>
+                            <option value="Alimentação">Alimentação</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Moradia">Moradia</option>
+                            <option value="Lazer">Lazer</option>
+                            <option value="Salário">Salário</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Vincular Cartão</label>
+                    <select id="transaction-card">
+                        <option value="">Nenhum / Dinheiro</option>
+                        <!-- Preenchido via JS -->
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModals()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-tx">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Cartão -->
+    <div id="modal-card" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Novo Cartão Virtual</h3>
+                <button class="close-btn" onclick="closeModals()"><i data-lucide="x"></i></button>
+            </div>
+            <form id="card-form" novalidate>
+                <div class="form-group">
+                    <label>Nome do Cartão (Apelido)</label>
+                    <input type="text" id="card-name" placeholder="Ex: Cartão Mercado" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Últimos 4 dígitos</label>
+                        <input type="text" id="card-last4" maxlength="4" placeholder="1234" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Bandeira</label>
+                        <select id="card-brand" required>
+                            <option value="mastercard">Mastercard</option>
+                            <option value="visa">Visa</option>
+                            <option value="amex">American Express</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModals()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Adicionar Cartão</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

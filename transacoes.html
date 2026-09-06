@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transações | Controle Financeiro</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i data-lucide="layout-dashboard"></i>
+                <span>COINEST</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-item"><i data-lucide="grid"></i> Dashboard</a>
+                <a href="transacoes.html" class="nav-item active"><i data-lucide="arrow-left-right"></i> Transações</a>
+                <a href="#" class="nav-item"><i data-lucide="credit-card"></i> Cartões</a>
+                <a href="#" class="nav-item"><i data-lucide="pie-chart"></i> Relatórios</a>
+                <a href="#" class="nav-item"><i data-lucide="settings"></i> Configurações</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header class="topbar">
+                <h2>Histórico de Transações</h2>
+                <div class="topbar-actions">
+                    <button class="icon-btn"><i data-lucide="bell"></i></button>
+                    <div class="user-profile">
+                        <div class="avatar">ES</div>
+                        <span>Eduardo Soares</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <!-- Painel de Ações e Filtros Avançados -->
+                <div class="panel filters-panel">
+                    <div class="panel-header">
+                        <h3>Filtros Avançados</h3>
+                        <div class="actions">
+                            <button class="btn btn-outline" onclick="exportToCSV()"><i data-lucide="download"></i> Exportar CSV</button>
+                            <button class="btn btn-primary" onclick="openTransactionModal()"><i data-lucide="plus"></i> Nova Transação</button>
+                        </div>
+                    </div>
+                    
+                    <div class="advanced-filters">
+                        <div class="filter-group">
+                            <label>Buscar</label>
+                            <div class="search-box-inline">
+                                <i data-lucide="search"></i>
+                                <input type="text" id="filter-search" placeholder="Descrição ou valor...">
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <label>Data Inicial</label>
+                            <input type="date" id="filter-date-start">
+                        </div>
+                        <div class="filter-group">
+                            <label>Data Final</label>
+                            <input type="date" id="filter-date-end">
+                        </div>
+                        <div class="filter-group">
+                            <label>Tipo</label>
+                            <select id="filter-type">
+                                <option value="todos">Todos</option>
+                                <option value="receita">Receitas</option>
+                                <option value="despesa">Despesas</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Categoria</label>
+                            <select id="filter-category">
+                                <option value="todas">Todas</option>
+                                <option value="Alimentação">Alimentação</option>
+                                <option value="Transporte">Transporte</option>
+                                <option value="Moradia">Moradia</option>
+                                <option value="Lazer">Lazer</option>
+                                <option value="Salário">Salário</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Cartão</label>
+                            <select id="filter-card">
+                                <option value="todos">Todos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filters-footer">
+                        <button class="btn btn-outline btn-sm" onclick="clearFilters()">Limpar Filtros</button>
+                    </div>
+                </div>
+
+                <!-- Resumo Dinâmico dos Filtros -->
+                <div class="dynamic-summary">
+                    <div class="summary-pill income">
+                        <i data-lucide="arrow-up-circle"></i>
+                        <span>Entradas no período: <strong id="filtered-income">R$ 0,00</strong></span>
+                    </div>
+                    <div class="summary-pill expense">
+                        <i data-lucide="arrow-down-circle"></i>
+                        <span>Saídas no período: <strong id="filtered-expense">R$ 0,00</strong></span>
+                    </div>
+                    <div class="summary-pill balance">
+                        <i data-lucide="wallet"></i>
+                        <span>Saldo do período: <strong id="filtered-balance">R$ 0,00</strong></span>
+                    </div>
+                </div>
+
+                <!-- Tabela Completa -->
+                <div class="panel list-panel">
+                    <div class="table-responsive">
+                        <table class="transactions-table full-table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Data</th>
+                                    <th>Descrição</th>
+                                    <th>Categoria</th>
+                                    <th>Cartão / Conta</th>
+                                    <th>Valor</th>
+                                    <th class="text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-list">
+                                <!-- Renderizado via JS -->
+                            </tbody>
+                        </table>
+                        <div id="empty-state" class="empty-state hidden">Nenhuma transação atende aos critérios da busca.</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Transação (Reutilizado) -->
+    <div id="modal-transaction" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="form-title">Nova Transação</h3>
+                <button class="close-btn" onclick="closeModals()"><i data-lucide="x"></i></button>
+            </div>
+            <form id="transaction-form" novalidate>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="description" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor (R$)</label>
+                        <input type="text" id="amount" inputmode="numeric" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="date" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="type" required>
+                            <option value="despesa">Despesa</option>
+                            <option value="receita">Receita</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select id="category" required>
+                            <option value="Alimentação">Alimentação</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Moradia">Moradia</option>
+                            <option value="Lazer">Lazer</option>
+                            <option value="Salário">Salário</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Vincular Cartão</label>
+                    <select id="transaction-card">
+                        <option value="">Nenhum / Dinheiro</option>
+                        <!-- Preenchido via JS -->
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModals()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-tx">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="transacoes.js"></script>
+</body>
+</html>
