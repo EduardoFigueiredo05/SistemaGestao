@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const loadData = () => {
     transactions = JSON.parse(localStorage.getItem(TX_STORAGE)) || [];
     cards = JSON.parse(localStorage.getItem(CARD_STORAGE)) || [
-        { id: '1', name: 'Cartão Principal', last4: '4321', brand: 'mastercard' } // Default mock
+        { id: '1', name: 'Cartão Principal', last4: '4321', brand: 'mastercard', color: '#103b31', limit: 5000 } // Default mock atualizado
     ];
 };
 
@@ -59,9 +59,10 @@ const renderCards = () => {
     cards.forEach(card => {
         const li = document.createElement('li');
         li.className = 'card-item';
+        const cardColor = card.color || 'var(--primary)';
         li.innerHTML = `
             <div class="card-item-info">
-                <i data-lucide="credit-card"></i>
+                <i data-lucide="credit-card" style="color: ${cardColor};"></i>
                 <div class="card-item-details">
                     <strong>${card.name}</strong>
                     <span>**** ${card.last4}</span>
@@ -72,9 +73,23 @@ const renderCards = () => {
         list.appendChild(li);
     });
     
-    // Atualiza o display do cartão principal no resumo
+    // Atualiza o display do cartão principal no resumo e reflete a cor no Dashboard
+    const virtualCardElement = document.querySelector('.virtual-card-display');
+    const activeCardNumber = document.getElementById('active-card-number');
+    
     if(cards.length > 0) {
-        document.getElementById('active-card-number').textContent = `**** **** **** ${cards[0].last4}`;
+        activeCardNumber.textContent = `**** **** **** ${cards[0].last4}`;
+        
+        if (virtualCardElement) {
+            const mainColor = cards[0].color || '#103b31';
+            // Cria um degradê combinando a cor do cartão com um tom mais escuro
+            virtualCardElement.style.background = `linear-gradient(135deg, ${mainColor}, #00000060)`;
+        }
+    } else {
+        activeCardNumber.textContent = 'Nenhum cartão';
+        if (virtualCardElement) {
+            virtualCardElement.style.background = `linear-gradient(135deg, var(--primary), var(--primary-light))`;
+        }
     }
     
     lucide.createIcons();
@@ -90,13 +105,16 @@ const updateCardSelects = () => {
     selectFilter.innerHTML = '<option value="todos">Todos os Cartões</option>' + optionsHTML;
 };
 
+// Cadastro rápido de cartão via Dashboard (Usa cor e limite padrão, edição completa é feita na tela de Cartões)
 document.getElementById('card-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const newCard = {
         id: generateId(),
         name: document.getElementById('card-name').value,
         last4: document.getElementById('card-last4').value,
-        brand: document.getElementById('card-brand').value
+        brand: document.getElementById('card-brand').value,
+        color: '#103b31', // Cor padrão ao criar pelo dashboard rápido
+        limit: 0 // Limite padrão
     };
     cards.push(newCard);
     saveData();
